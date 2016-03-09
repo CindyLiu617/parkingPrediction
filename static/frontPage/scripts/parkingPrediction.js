@@ -5,6 +5,10 @@
 
 var myApp = angular.module('uploadPage', []);
 
+myApp.config(function($interpolateProvider){
+    $interpolateProvider.startSymbol('//').endSymbol('//');
+});
+
 myApp.factory('alertsManager', function () {
     return {
         alerts: {},
@@ -17,21 +21,22 @@ myApp.factory('alertsManager', function () {
 
 myApp.service('fileUpload', ['$http', 'alertsManager',
     function ($http, alertsManager) {
-    this.uploadFileToUrl = function (file, uploadUrl) {
-        var fd = new FormData();
-        fd.append('file', file);
-        $http.post(uploadUrl, fd, {
-                transformRequest: angular.identity,
-                headers: {'Content-type': undefined}
-            })
-            .success(function (data) {
-                debugger
-            })
-            .error(function () {
-                alertsManager.addAlert('File Upload Fail! Please Try Again!', 'alert-error');
-            });
-    }
-}]);
+        this.uploadFileToUrl = function (file, uploadUrl, scope) {
+            var fd = new FormData();
+            fd.append('file', file);
+            $http.post(uploadUrl, fd, {
+                    transformRequest: angular.identity,
+                    headers: {'Content-type': undefined}
+                })
+                .success(function (response) {
+                    scope.receivedData = response;
+                    debugger
+                })
+                .error(function () {
+                    alertsManager.addAlert('File Upload Fail! Please Try Again!', 'alert-error');
+                });
+        }
+    }]);
 
 myApp.directive('fileModel', ['$parse', function ($parse) {
     return {
@@ -49,14 +54,89 @@ myApp.directive('fileModel', ['$parse', function ($parse) {
     };
 }]);
 
+myApp.directive('linearChart', ['$window', '$parse',
+    function ($window, $parse) {
+        return {
+            restrict: "EA",
+            template: "<svg width='850' height='200'></svg>",
+            transclude: true,
+            scope: {
+                chartData: '=chartData'
+            },
+            link: function (scope, elem, attrs) {
+
+                function drawLineChart(dataToPlot, padding, pathClass, d3, svg, rawSvg) {
+                    var xScale = d3.scale.linear()
+                        .domain([dataToPlot[0].hour, dataToPlot[dataToPlot.length - 1].hour])
+                        .range([padding + 5, rawSvg.clientWidth - padding]);
+
+                    var yScale = d3.scale.linear()
+                        .domain([0, d3.max(dataToPlot, function (d) {
+                            return d.sales;
+                        })])
+                        .range([rawSvg.clientHeight - padding, 0]);
+
+                    var xAxisGen = d3.svg.axis()
+                        .scale(xScale)
+                        .orient("bottom")
+                        .ticks(dataToPlot.length - 1);
+
+                    var yAxisGen = d3.svg.axis()
+                        .scale(yScale)
+                        .orient("left")
+                        .ticks(5);
+
+                    var lineFun = d3.svg.line()
+                        .x(function (d) {
+                            return xScale(d.hour);
+                        })
+                        .y(function (d) {
+                            return yScale(d.sales);
+                        })
+                        .interpolate("basis");
+
+                    svg.append("svg:g")
+                        .attr("class", "x axis")
+                        .attr("transform", "translate(0,180)")
+                        .call(xAxisGen);
+
+                    svg.append("svg:g")
+                        .attr("class", "y axis")
+                        .attr("transform", "translate(20,0)")
+                        .call(yAxisGen);
+
+                    svg.append("svg:path")
+                        .attr({
+                            d: lineFun(dataToPlot),
+                            "stroke": "blue",
+                            "stroke-width": 2,
+                            "fill": "none",
+                            "class": pathClass
+                        });
+                }
+
+                scope.$watch('chartData', function(data) {
+                    var padding = 20;
+
+                    var pathClass = "path";
+                    var d3 = $window.d3;
+                    var rawSvg = elem.find("svg")[0];
+                    var svg = d3.select(rawSvg);
+                    if (data) {
+                        drawLineChart(data.inputData, padding, pathClass, d3, svg, rawSvg);
+                    }
+                });
+            }
+        };
+    }]);
+
 myApp.controller('frontPageController', ['$scope', 'fileUpload',
     function ($scope, fileUpload) {
-    $scope.uploadFile = function () {
-        var file = $scope.myfiles;
+        $scope.uploadFile = function () {
+            var file = $scope.myfiles;
 
-        var uploadUrl = "/fileUpload";
-        fileUpload.uploadFileToUrl(file, uploadUrl);
-    };
+            var uploadUrl = "/fileUpload";
+            fileUpload.uploadFileToUrl(file, uploadUrl, $scope);
+        };
 
-}]);
-
+    }]);

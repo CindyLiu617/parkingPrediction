@@ -52,6 +52,6 @@ def upload(request):
                 destination.close()
 
             # analyze and computation
-
-            return HttpResponse(json.dumps({'key': 'value'}))
+            data = open(os.path.join(settings.BASE_DIR) + '/frontPage/sampleOutput.json').read()
+            return HttpResponse(data)
     return Response(status=status.HTTP_400_BAD_REQUEST)
