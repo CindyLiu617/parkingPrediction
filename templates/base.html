@@ -14,7 +14,20 @@
     <link rel="stylesheet" href="{% static "frontPage/styles/styleSheet.css" %}">
 
 </head>
-<body ng-app="uploadPage" style = "height: 100%">
+<body ng-app="uploadPage" style="height: 100%">
+<!-- Single button -->
+<div class="btn-group">
+    <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        Action
+    </button>
+    <div class="dropdown-menu">
+        <a class="dropdown-item" href="#">Action</a>
+        <a class="dropdown-item" href="#">Another action</a>
+        <a class="dropdown-item" href="#">Something else here</a>
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item" href="#">Separated link</a>
+    </div>
+</div>
 <nav class="navbar navbar-inverse">
     <div class="container-fluid">
         <div class="navbar-header">
@@ -39,38 +52,42 @@
     </div>
 </nav>
 
-<div ng-controller="frontPageController" class="container-fluid text-center" style = "height: 100%">
+<div ng-controller="frontPageController" class="container-fluid text-center" style="height: 100%">
     <div class="row content">
-{#        <div class="col-sm-2 sidenav">#}
-{#            <p><a href="#">Link</a></p>#}
-{#            <p><a href="#">Link</a></p>#}
-{#            <p><a href="#">Link</a></p>#}
-{#        </div>#}
-        <div class="col-sm-8 text-left">
-            <h1>Please Upload Your Historical Data Here!</h1>
-            <div >
-                <input type="file" file-model="myfiles"/>
+        {#        <div class="col-sm-2 sidenav">#}
+        {#            <p><a href="#">Link</a></p>#}
+        {#            <p><a href="#">Link</a></p>#}
+        {#            <p><a href="#">Link</a></p>#}
+        {#        </div>#}
+        <div class="col-sm-8 text-left" style="width:100%">
+            <h1 style="text-align: center">Please Upload Your Historical Data Here!</h1>
+            <div style="text-align: center">
+                <input type="file" file-model="myfiles" style="text-align: center"/>
                 <button ng-click="uploadFile()">Submit</button>
             </div>
             <hr>
-            <h3>Predict Results</h3>
+            <h3 style="text-align: center">Predict Results</h3>
             <div>
-                <div linear-chart chart-data="receivedData"></div>
+                <select ng-model="selectedYear" ng-options="year for year in yearOption" style="width:100px"></select>
+                <select ng-model="selectedMonth" ng-options="month for month in monthOption[selectedYear]"
+                        style="width:100px"></select>
+                <select ng-model="selectedDay" ng-options="day for day in dateOption[selectedMonth]" style="width:100px"></select>
+                <div linear-chart chart-data="chartData"></div>
             </div>
+
         </div>
-{#        <div class="col-sm-2 sidenav">#}
-{#            <div class="well">#}
-{#                <p>ADS</p>#}
-{#            </div>#}
-{#            <div class="well">#}
-{#                <p>ADS</p>#}
-{#            </div>#}
-{#        </div>#}
+        {#        <div class="col-sm-2 sidenav">#}
+        {#            <div class="well">#}
+        {#                <p>ADS</p>#}
+        {#            </div>#}
+        {#            <div class="well">#}
+        {#                <p>ADS</p>#}
+        {#            </div>#}
+        {#        </div>#}
     </div>
 </div>
 
 <footer class="container-fluid text-center">
-    <p>Footer Text</p>
 </footer>
 
 </body>

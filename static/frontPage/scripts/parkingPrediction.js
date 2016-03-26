@@ -5,7 +5,7 @@
 
 var myApp = angular.module('uploadPage', []);
 
-myApp.config(function($interpolateProvider){
+myApp.config(function ($interpolateProvider) {
     $interpolateProvider.startSymbol('//').endSymbol('//');
 });
 
@@ -29,8 +29,11 @@ myApp.service('fileUpload', ['$http', 'alertsManager',
                     headers: {'Content-type': undefined}
                 })
                 .success(function (response) {
-                    scope.receivedData = response;
-                    debugger
+                    scope.receivedData = response.occupancyData;
+                    var metaData = response.metaData;
+                    scope.yearOption = metaData.yearOption;
+                    scope.monthOption = metaData.monthOption;
+                    scope.dateOption = metaData.dateOption;
                 })
                 .error(function () {
                     alertsManager.addAlert('File Upload Fail! Please Try Again!', 'alert-error');
@@ -58,7 +61,7 @@ myApp.directive('linearChart', ['$window', '$parse',
     function ($window, $parse) {
         return {
             restrict: "EA",
-            template: "<svg width='850' height='200'></svg>",
+            template: "<svg width='850' height='200' display: block></svg>",
             transclude: true,
             scope: {
                 chartData: '=chartData'
@@ -67,12 +70,14 @@ myApp.directive('linearChart', ['$window', '$parse',
 
                 function drawLineChart(dataToPlot, padding, pathClass, d3, svg, rawSvg) {
                     var xScale = d3.scale.linear()
-                        .domain([dataToPlot[0].hour, dataToPlot[dataToPlot.length - 1].hour])
+                        .domain([dataToPlot[0].time.value, dataToPlot[dataToPlot.length - 1].time.value])
                         .range([padding + 5, rawSvg.clientWidth - padding]);
 
                     var yScale = d3.scale.linear()
-                        .domain([0, d3.max(dataToPlot, function (d) {
-                            return d.sales;
+                        .domain([d3.min(dataToPlot, function (d) {
+                            return d.occupancy;
+                        }), d3.max(dataToPlot, function (d) {
+                            return d.occupancy;
                         })])
                         .range([rawSvg.clientHeight - padding, 0]);
 
@@ -88,10 +93,10 @@ myApp.directive('linearChart', ['$window', '$parse',
 
                     var lineFun = d3.svg.line()
                         .x(function (d) {
-                            return xScale(d.hour);
+                            return xScale(d.time.value);
                         })
                         .y(function (d) {
-                            return yScale(d.sales);
+                            return yScale(d.occupancy);
                         })
                         .interpolate("basis");
 
@@ -115,7 +120,7 @@ myApp.directive('linearChart', ['$window', '$parse',
                         });
                 }
 
-                scope.$watch('chartData', function(data) {
+                scope.$watch('chartData', function (data) {
                     var padding = 20;
 
                     var pathClass = "path";
@@ -123,12 +128,15 @@ myApp.directive('linearChart', ['$window', '$parse',
                     var rawSvg = elem.find("svg")[0];
                     var svg = d3.select(rawSvg);
                     if (data) {
-                        drawLineChart(data.inputData, padding, pathClass, d3, svg, rawSvg);
+                        debugger
+                        d3.selectAll("svg > *").remove();
+                        drawLineChart(data, padding, pathClass, d3, svg, rawSvg);
                     }
                 });
             }
         };
     }]);
+
 
 myApp.controller('frontPageController', ['$scope', 'fileUpload',
     function ($scope, fileUpload) {
@@ -139,4 +147,19 @@ myApp.controller('frontPageController', ['$scope', 'fileUpload',
             fileUpload.uploadFileToUrl(file, uploadUrl, $scope);
         };
 
+        $scope.$watch('selectedYear', function (year) {
+            if (year) {
+                $scope.chartData = $scope.receivedData[year];
+            }
+        });
+        $scope.$watch('selectedMonth', function (month) {
+            if (month) {
+                $scope.chartData = $scope.receivedData[month];
+            }
+        });
+        $scope.$watch('selectedDay', function (day) {
+            if (day) {
+                $scope.chartData = $scope.receivedData[day];
+            }
+        });
     }]);

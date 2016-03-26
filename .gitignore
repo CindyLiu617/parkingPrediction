@@ -1,4 +1,6 @@
 db.sqlite3
 .idea
+*.pyc
+*.iml
 static/bower_components
 fileUploaded

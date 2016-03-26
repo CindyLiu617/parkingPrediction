@@ -17,14 +17,14 @@ from django.conf.urls import url, include
 from django.conf.urls.static import static
 from django.contrib import admin
 
-import frontPage.views
+import app.views
 import settings
 
 admin.autodiscover()
 
 urlpatterns = [
                   url(r'^admin/', admin.site.urls),
-                  url(r'^$', frontPage.views.home, name='home'),
-                  url(r'^fileUpload', frontPage.views.upload, name='upload'),
+                  url(r'^$', app.views.home, name='home'),
+                  url(r'^fileUpload', app.views.upload, name='upload'),
                   url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework'))
               ] + static(settings.STATIC_URL)

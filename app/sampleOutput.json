@@ -1,0 +1,136 @@
+{
+  "metaData": {
+    "yearOption": [
+      "2016"
+    ],
+    "monthOption": {
+      "2016": [
+        "2016-Jan",
+        "2016-Feb"
+      ]
+    },
+    "dateOption": {
+      "2016-Feb": [
+        "2016-Feb-01",
+        "2016-Feb-02"
+      ]
+    }
+  },
+  "occupancyData": {
+    "2016": [
+      {
+        "time": {
+          "name": "Jan",
+          "value": 1
+        },
+        "occupancy": 130
+      },
+      {
+        "time": {
+          "name": "Feb",
+          "value": 2
+        },
+        "occupancy": 142
+      },
+      {
+        "time": {
+          "name": "Mar",
+          "value": 3
+        },
+        "occupancy": 157
+      }
+    ],
+    "2016-Jan": [
+      {
+        "time": {
+          "name": "01",
+          "value": 1
+        },
+        "occupancy": 96
+      },
+      {
+        "time": {
+          "name": "02",
+          "value": 2
+        },
+        "occupancy": 100
+      },
+      {
+        "time": {
+          "name": "03",
+          "value": 3
+        },
+        "occupancy": 97
+      }
+    ],
+    "2016-Feb": [
+      {
+        "time": {
+          "name": "01",
+          "value": 1
+        },
+        "occupancy": 100
+      },
+      {
+        "time": {
+          "name": "02",
+          "value": 2
+        },
+        "occupancy": 120
+      },
+      {
+        "time": {
+          "name": "03",
+          "value": 3
+        },
+        "occupancy": 97
+      }
+    ],
+    "2016-Feb-01": [
+      {
+        "time": {
+          "name": "00:00:00",
+          "value": 0
+        },
+        "occupancy": 13
+      },
+      {
+        "time": {
+          "name": "01:00:00",
+          "value": 1
+        },
+        "occupancy": 13
+      },
+      {
+        "time": {
+          "name": "02:00:00",
+          "value": 2
+        },
+        "occupancy": 14
+      }
+    ],
+    "2016-Feb-02": [
+      {
+        "time": {
+          "name": "00:00:00",
+          "value": 0
+        },
+        "occupancy": 13
+      },
+      {
+        "time": {
+          "name": "01:00:00",
+          "value": 1
+        },
+        "occupancy": 13
+      },
+      {
+        "time": {
+          "name": "02:00:00",
+          "value": 2
+        },
+        "occupancy": 14
+      }
+    ]
+  }
+}

@@ -34,3 +34,7 @@ footer {
         height: auto;
     }
 }
+
+.col-sm-8 {
+    width:100%;
+}
