@@ -4,3 +4,4 @@ db.sqlite3
 *.iml
 static/bower_components
 fileUploaded
+.DS_Store
