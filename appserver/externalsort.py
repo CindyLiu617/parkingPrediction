@@ -1,6 +1,7 @@
 import csv
 import heapq
-from datetime import *
+
+from appserver import utils
 
 LINES_PER_FILE = 100000
 
@@ -40,14 +41,11 @@ def external_sort(local_file):
                         exit_times = []
             return entry_files, exit_files
 
-    def get_time(time_stamp, fmt):
-        return datetime.strptime(time_stamp, fmt)
-
     def sort_string_list(time_string_list):
         def compare(left, right):
             fmt = "%Y-%m-%d  %H:%M:%S"
-            left_time = get_time(left, fmt)
-            right_time = get_time(right, fmt)
+            left_time = utils.str_to_datetime(left, fmt)
+            right_time = utils.str_to_datetime(right, fmt)
             if left_time > right_time:
                 return 1
             elif left_time < right_time:
@@ -67,19 +65,19 @@ def external_sort(local_file):
                     f = open(file_name, 'r')
                     file_readers.append(f)
                 heap = []
-                for file in file_readers:
-                    line_read = file.readline()
-                    heap.append((get_time(line_read, fmt), line_read, file))
+                for reader in file_readers:
+                    line_read = reader.readline()
+                    heap.append((utils.str_to_datetime(line_read, fmt), line_read, reader))
                 heapq.heapify(heap)
                 while heap:
                     pop = heapq.heappop(heap)
                     merged_file.write(pop[1])
                     line_read = pop[2].readline().strip()
                     if line_read != "":
-                        heapq.heappush(heap, (get_time(line_read, fmt), line_read, pop[2]))
+                        heapq.heappush(heap, (utils.str_to_datetime(line_read, fmt), line_read, pop[2]))
                 merged_file.close()
-                for file in file_readers:
-                    file.close()
+                for reader in file_readers:
+                    reader.close()
                 return merged_file_name
             except IOError as e:
                 print('Operation failed: %s' % e.strerror)
