@@ -9,6 +9,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+from appserver.dataAnalysis import record_constructor
 from parkingPrediction import settings
 
 
@@ -40,9 +41,9 @@ def upload(request):
     if request.method == "POST":
         uploadedfile = request.FILES.get("file", None)
         if uploadedfile:
+            localfile = os.path.join(settings.BASE_DIR + "/fileUploaded", uploadedfile.name)
             try:
-                destination = open(os.path.join(settings.BASE_DIR + "/fileUploaded", uploadedfile.name),
-                               'wb+')
+                destination = open(localfile, 'wb+')
                 for chunk in uploadedfile.chunks():
                     destination.write(chunk)
             except IOError:
@@ -50,8 +51,9 @@ def upload(request):
                 return Response(status=status.HTTP_400_BAD_REQUEST)
             else:
                 destination.close()
+                record_constructor(localfile)
 
             # analyze and computation
-            data = open(os.path.join(settings.BASE_DIR) + '/frontPage/sampleOutput.json').read()
+            data = open(os.path.join(settings.BASE_DIR) + '/app/sampleOutput.json').read()
             return HttpResponse(data)
     return Response(status=status.HTTP_400_BAD_REQUEST)

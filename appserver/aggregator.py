@@ -1,4 +1,4 @@
-from appserver import utils
+import utils
 
 
 def number_of_overlap(entries_file, exits_file):
