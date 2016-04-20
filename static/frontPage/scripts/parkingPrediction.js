@@ -137,6 +137,27 @@ myApp.directive('linearChart', ['$window', '$parse',
         };
     }]);
 
+myApp.directive('ngsButterbar', ['$rootScope',
+    function ($rootScope) {
+        return {
+            link: function (scope, element) {
+
+                element.hide();
+
+                $rootScope.$on('$routeChangeStart', function () {
+                    element.show();
+                    $('div[ng-view]').css('opacity', '0.5');
+                });
+
+                $rootScope.$on('$routeChangeSuccess', function () {
+                    element.hide();
+                    $('div[ng-view]').css('opacity', '1');
+                });
+            }
+        };
+    }]
+);
+
 
 myApp.controller('frontPageController', ['$scope', 'fileUpload',
     function ($scope, fileUpload) {

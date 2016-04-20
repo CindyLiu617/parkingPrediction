@@ -1,3 +1,5 @@
+import os
+
 import externalsort
 
-externalsort.external_sort("/Users/James/Desktop/PP/Learning/BitTiger/ParkingPrediction/transactions.csv")
+externalsort.external_sort(os.getcwd() + '/test.csv')

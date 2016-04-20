@@ -4,12 +4,18 @@ import os
 
 import utils
 
-LINES_PER_FILE = 100000
-DATE_FORMAT = "%Y-%m-%d  %H:%M:%S\n"
+LINES_PER_FILE = 50000
+DATE_FORMAT = '%Y-%m-%d  %H:%M:%S\n'
 
 
 def external_sort(local_file):
     def record_constructor(uploaded):
+        def save_sorted(time_str_list, file_name):
+            sorted_time_str = sort_string_list(time_str_list)
+            with open(file_name, 'w') as f:
+                f.writelines(sorted_time_str)
+            return file_name
+
         with open(uploaded, 'rb') as f:
             csv_reader = csv.reader(f, delimiter='\t')
             entry_times = []
@@ -20,33 +26,30 @@ def external_sort(local_file):
             for i, line in enumerate(csv_reader):
                 if i > 0:
                     splited = line[0].split(',')
-                    entry_time = "%s\n" % splited[0]
-                    exit_time = "%s\n" % splited[1]
+                    entry_time = '%s\n' % splited[0]
+                    exit_time = '%s\n' % splited[1]
                     entry_times.append(entry_time)
                     exit_times.append(exit_time)
                     if i % LINES_PER_FILE == 0:
-                        entry_time = sort_string_list(entry_times)
-                        exit_time = sort_string_list(exit_times)
                         try:
-                            entry_file_name = 'entryTime%d.txt' % file_index
-                            exit_file_name = 'exitTime%d.txt' % file_index
-                            entry_files.append(entry_file_name)
-                            exit_files.append(exit_file_name)
-                            with open(entry_file_name, 'w') as entry_time_txt,\
-                                    open(exit_file_name, 'w') as exit_time_txt:
-                                entry_time_txt.writelines(entry_time)
-                                exit_time_txt.writelines(exit_time)
-                                file_index += 1
+                            entry_files.append(save_sorted(entry_times, 'entryTime%d.txt' % file_index))
+                            exit_files.append(save_sorted(exit_times, 'exitTime%d.txt' % file_index))
+                            file_index += 1
                         except IOError as e:
                             print('Operation failed: %s' % e.strerror)
                         entry_times = []
                         exit_times = []
+            if len(entry_times) != 0:
+                entry_files.append(save_sorted(entry_times, 'entryTime%d.txt' % file_index))
+                exit_files.append(save_sorted(exit_times, 'exitTime%d.txt' % file_index))
             return entry_files, exit_files
 
     def sort_string_list(time_string_list):
+        cache = {}
+
         def compare(left, right):
-            left_time = utils.str_to_datetime(left, DATE_FORMAT)
-            right_time = utils.str_to_datetime(right, DATE_FORMAT)
+            left_time = utils.str_to_datetime(left, DATE_FORMAT, cache=cache)
+            right_time = utils.str_to_datetime(right, DATE_FORMAT, cache=cache)
             if left_time > right_time:
                 return 1
             elif left_time < right_time:
@@ -72,8 +75,8 @@ def external_sort(local_file):
                 while heap:
                     pop = heapq.heappop(heap)
                     merged_file.write(pop[1])
-                    line_read = pop[2].readline().strip()
-                    if line_read != '':
+                    line_read = pop[2].readline()
+                    if line_read.strip() != '':
                         heapq.heappush(heap, (utils.str_to_datetime(line_read, DATE_FORMAT), line_read, pop[2]))
                 merged_file.close()
                 for reader in file_readers:

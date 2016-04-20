@@ -1,0 +1,50 @@
+{
+  "metaSchema": {
+    "cols": [
+      "YEAR",
+      "MONTH",
+      "DAY",
+      "WEEK",
+      "HOUR",
+      "MINUTE",
+      "CAR_NUM"
+    ]
+  },
+  "colsData": {
+    "YEAR": {
+      "name": "YEAR",
+      "type": "YEAR(4)",
+      "default": "0000"
+    },
+    "MONTH": {
+      "name": "MONTH",
+      "type": "INTEGER",
+      "default": "0"
+    },
+    "DAY": {
+      "name": "DAY",
+      "type": "INTEGER",
+      "default": "0"
+    },
+    "WEEK": {
+      "name": "WEEK",
+      "type": "INTEGER",
+      "default": "0"
+    },
+    "HOUR": {
+      "name": "HOUR",
+      "type": "INTEGER",
+      "default": "0"
+    },
+    "MINUTE": {
+      "name": "MINUTE",
+      "type": "INTEGER",
+      "default": "0"
+    },
+    "CAR_NUM": {
+      "name": "CAR_NUM",
+      "type": "INTEGER",
+      "default": "0"
+    }
+  }
+}

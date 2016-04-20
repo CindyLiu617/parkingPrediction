@@ -1,0 +1,70 @@
+{
+  "metaSchema": {
+    "cols": [
+      "YEAR",
+      "MONTH",
+      "DAY",
+      "WEEK",
+      "HOUR",
+      "MINUTE",
+      "CAR_NUM"
+    ]
+  },
+  "colsData": {
+    "YEAR": {
+      "name": "YEAR",
+      "type": "YEAR(4)",
+      "default": "0000"
+    },
+    "MONTH": {
+      "name": "MONTH",
+      "type": "INTEGER",
+      "default": "0"
+    },
+    "DAY": {
+      "name": "DAY",
+      "type": "INTEGER",
+      "default": "0"
+    },
+    "WEEK": {
+      "name": "WEEK",
+      "type": "INTEGER",
+      "default": "0"
+    },
+    "HOUR": {
+      "name": "HOUR",
+      "type": "INTEGER",
+      "default": "0"
+    },
+    "DIS_YEAR": {
+      "name": "DIS_YEAR",
+      "type": "INTEGER",
+      "default": "0"
+    },
+    "DIS_MONTH": {
+      "name": "DIS_MONTH",
+      "type": "INTEGER",
+      "default": "0"
+    },
+    "DIS_DAY": {
+      "name": "DIS_DAY",
+      "type": "INTEGER",
+      "default": "0"
+    },
+    "DIS_WEEK": {
+      "name": "DIS_WEEK",
+      "type": "INTEGER",
+      "default": "0"
+    },
+    "DIS_HOUR": {
+      "name": "DIS_HOUR",
+      "type": "INTEGER",
+      "default": "0"
+    },
+    "PREDICT_CAR_NUM": {
+      "name": "PREDICT_CAR_NUM",
+      "type": "INTEGER",
+      "default": "0"
+    }
+  }
+}

@@ -29,43 +29,83 @@ class DBRecord:
 
     def insert(self, table, col_list, val_list):
         cursor = self.connection.cursor()
-        command = "INSERT INTO %s (%s) VALUES (%s)" %table %col_list %val_list
+        command = "INSERT INTO %s (%s) VALUES (%s)" % (table, ','.join(col_list), ','.join(val_list))
         try:
             cursor.execute(command)
-            self.connection.commit()
+            # self.connection.commit()
         except:
             self.connection.rollback()
 
-    # TODO: ask what is op and value
-    def get_col_value(self, table, col,row, op, condition):
+    def get_col_value(self, table, col_get, col_condition, op, condition):
         cursor = self.connection.cursor()
-        command = "SELECT %s FROM %s WHERE %s %s %s" %col %table %row %op %condition
+        command = "SELECT %s FROM %s WHERE %s %s %s" % (col_get, table, col_condition, op, condition)
         try:
             cursor.execute(command)
             col_value = []
             result_set = cursor.fetchall()
             for row in result_set:
-                col_value.append("%s") %row[col]
+                col_value.append("%s") % row[col_get]
             return result_set
         except MySQLdb.Error, e:
             print('MySQLdb error %s: %s' % (e.args[0], e.args[1]))
 
-    # TODO: ask what is op and value
-    def update_data(self,table, col, row, op, value, condition):
+    def update_data(self, table, col_get, col_condition, op, new_value, condition):
         cursor = self.connection.cursor()
-        command = "UPDATE %s SET %s = %s WHERE %s %s %s " %table %col %value %row %op %condition
+        updata_data = "UPDATE %s SET %s = %s WHERE %s %s %s " % (
+            table, col_get, new_value, col_condition, op, condition)
         try:
-            cursor.execute(command)
+            cursor.execute(updata_data)
+            self.connection.commit()
         except MySQLdb.Error, e:
             print('MySQLdb error %s: %s' % (e.args[0], e.args[1]))
 
-    # TODO: ask delete
-    def delete(self):
+    def delete_data(self, table, col_get, col_condition, op, condition):
         cursor = self.connection.cursor()
+        delete_data = "UPDATE %s SET %s = 'NULL' WHERE %s %s %s " % (table, col_get, col_condition, op, condition)
         try:
+            cursor.execute(delete_data)
             self.connection.commit()
-        except:
-            self.connection.rollback()
+        except MySQLdb.Error, e:
+            print('MySQLdb error %s: %s' % (e.args[0], e.args[1]))
+
+    def get_max_in_col(self, table, col):
+        cursor = self.connection.cursor()
+        get_max_in_col = "SELECT MAX(%s) AS max FROM %s" % (table, col)
+        try:
+            cursor.execute(get_max_in_col)
+            max_val = cursor.fetchall()
+            return max_val
+        except MySQLdb.Error, e:
+            print('MySQLdb error %s: %s' % (e.args[0], e.args[1]))
+
+    def get_min_in_col(self, table, col):
+        cursor = self.connection.cursor()
+        get_min_in_col = "SELECT MIN(%s) AS min FROM %s" % (table, col)
+        try:
+            cursor.execute(get_min_in_col)
+            min_val = cursor.fetchall()
+            return min_val
+        except MySQLdb.Error, e:
+            print('MySQLdb error %s: %s' % (e.args[0], e.args[1]))
+
+    # TODO: alter command line to iterable
+    def check_valid_data(self, table, col_list, value_list):
+        cursor = self.connection.cursor()
+        command = "SELECT * FROM %s WHERE %s = %s and %s = %s and %s = %s and %s = %s and %s = %s" % (
+            table, col_list[0], value_list[0], col_list[1], value_list[1], col_list[2], value_list[2], col_list[3],
+            value_list[3], col_list[4], value_list[4])
+        try:
+            cursor.execute(command)
+            result_set = cursor.fetchall()
+            if result_set:
+                return True
+            else:
+                return False
+        except MySQLdb.Error, e:
+            print('MySQLdb error %s: %s' % (e.args[0], e.args[1]))
+
+    def commit_record(self):
+        self.connection.commit()
 
     def close(self):
         self.connection.close()
