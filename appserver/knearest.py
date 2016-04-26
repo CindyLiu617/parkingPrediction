@@ -1,9 +1,7 @@
 import json
 from datetime import date, datetime, timedelta
-
+import Queue
 import math
-
-import sys
 
 from utils import str_to_datetime
 from database import DBTable
@@ -12,9 +10,7 @@ from database import DBRecord
 PREDICTION_TABLE = 'prediction'
 HISTORICAL_TABLE = 'carOccupancy'
 DATE_FORMAT = '%Y-%m-%d  %H:%M:%S'
-EARLIEST = [2013, 1, 1, 0, 1]
-LATEST = [2016, 12, 31, 23, 7]
-
+DATA_STRUCTURE = ['YEAR', 'MONTH', 'WEEK', 'WEEKDAY', 'HOUR']
 my_db = DBTable()
 my_predict_table = DBRecord(PREDICTION_TABLE)
 my_history_table = DBRecord(HISTORICAL_TABLE)
@@ -26,7 +22,7 @@ def quote(val):
 
 # delta should be like timedelta(hours = 1)
 # start and end should be in datetime.strptime(s, "%Y-%m-%d  %H:%M:%S") format
-def span(start, end, delta):
+def get_span(start, end, delta):
     start_date = str_to_datetime(start, DATE_FORMAT)
     end_date = str_to_datetime(end, DATE_FORMAT)
     cur_date = start_date
@@ -37,9 +33,8 @@ def span(start, end, delta):
 
 def k_nearest(start, end):
     col_list = []
-    change_step = get_change_step(EARLIEST, LATEST)
-    data_need_to_predict = []
-    # TODO: build new json metadata structure for prediction database
+    earliest_history = []
+    latest_history = []
     with open(
             '/Users/James/Desktop/PP/Learning/BitTiger/ParkingPrediction/parkingPrediction/appserver/database/PredictionDBMetaSchema.json') as data_file:
         data = json.load(data_file)
@@ -52,186 +47,115 @@ def k_nearest(start, end):
             my_db.insert_col(PREDICTION_TABLE, col_name, col_type)
             col_list.append(col_name.encode('utf-8'))
 
-        earliest_year = my_predict_table.get_min_in_col(HISTORICAL_TABLE, 'YEAR')
-        latest_year = my_predict_table.get_max_in_col(HISTORICAL_TABLE, 'YEAR')
-        coefficient_year = get_coefficient(earliest_year, latest_year)
+        earliest_year = my_predict_table.get_min_in_col('YEAR')
+        latest_year = my_predict_table.get_max_in_col('YEAR')
+        earliest_history.append(earliest_year[0][0])
+        latest_history.append(latest_year[0][0])
 
-        earliest_month = my_predict_table.get_min_in_col(HISTORICAL_TABLE, 'MONTH')
-        latest_month = my_predict_table.get_max_in_col(HISTORICAL_TABLE, 'MONTH')
-        coefficient_month = get_coefficient(earliest_month, latest_month)
+        earliest_month = my_predict_table.get_min_in_col('MONTH')
+        latest_month = my_predict_table.get_max_in_col('MONTH')
+        earliest_history.append(earliest_month[0][0])
+        latest_history.append(latest_month[0][0])
 
-        earliest_day = my_predict_table.get_min_in_col(HISTORICAL_TABLE, 'DAY')
-        latest_day = my_predict_table.get_max_in_col(HISTORICAL_TABLE, 'DAY')
-        coefficient_day = get_coefficient(earliest_day, latest_day)
+        earliest_weekday = my_predict_table.get_min_in_col('WEEKDAY')
+        latest_weekday = my_predict_table.get_max_in_col('WEEKDAY')
+        earliest_history.append(earliest_weekday[0][0])
+        latest_history.append(latest_weekday[0][0])
 
-        earliest_week = my_predict_table.get_min_in_col(HISTORICAL_TABLE, 'WEEK')
-        latest_week = my_predict_table.get_max_in_col(HISTORICAL_TABLE, 'WEEK')
-        coefficient_week = get_coefficient(earliest_week, latest_week)
+        earliest_week = my_predict_table.get_min_in_col('WEEK')
+        latest_week = my_predict_table.get_max_in_col('WEEK')
+        earliest_history.append(earliest_week[0][0])
+        latest_history.append(latest_week[0][0])
 
-        earliest_hour = my_predict_table.get_min_in_col(HISTORICAL_TABLE, 'HOUR')
-        latest_hour = my_predict_table.get_max_in_col(HISTORICAL_TABLE, 'HOUR')
-        coefficient_hour = get_coefficient(earliest_hour, latest_hour)
+        earliest_hour = my_predict_table.get_min_in_col('HOUR')
+        latest_hour = my_predict_table.get_max_in_col('HOUR')
+        earliest_history.append(earliest_hour[0][0])
+        latest_history.append(latest_hour[0][0])
 
-        for every_hour in span(start, end, timedelta(hours=1)):
+        for every_hour in get_span(start, end, timedelta(hours=1)):
             time_tuple = every_hour.timetuple()
-            year = quote(time_tuple[0])
-            month = quote(time_tuple[1])
-            day = quote(time_tuple[2])
-            week = quote(time_tuple[6])
-            hour = quote(time_tuple[3])
-            distributed_year = distribute_attr(year, coefficient_year)
-            distributed_month = distribute_attr(month, coefficient_month)
-            distributed_day = distribute_attr(day, coefficient_day)
-            distributed_week = distribute_attr(week, coefficient_week)
-            distributed_hour = distribute_attr(hour, coefficient_hour)
-            distributed_list = [distributed_year, distributed_month, distributed_day, distributed_week, distributed_hour]
-            data_need_to_predict = [distributed_year, distributed_month, distributed_day, distributed_week,
-                                    distributed_hour]
+            year = time_tuple[0]
+            month = time_tuple[1]
+            weekday = time_tuple[6]
+            week = time_tuple[2] / 7
+            hour = time_tuple[3]
 
-            my_predict_table.insert(PREDICTION_TABLE, col_list[:-1],
-                                    [year, month, day, week, hour, distributed_year, distributed_month, distributed_day,# get 10 nearest data sample
-                                     distributed_week, distributed_hour])
-            nearest_data_set = get_nearest_in_10_data_samples(data_need_to_predict, change_step)
-            # check validity, renew nearest_data_set
-            nearest_data_set = eliminate_un_valid_data(nearest_data_set, distributed_list)
-
-            # predict count
-            neighbours_distance = get_neighbours_distance(nearest_data_set, data_need_to_predict)
-            weighted_neighbours_distance = get_weighted_neighbours_distance(neighbours_distance)
-            predict_count = get_weighted_estimated_car_num(neighbours_distance, weighted_neighbours_distance)
-            my_predict_table.insert(PREDICTION_TABLE, 'PREDICT_CNT', predict_count)
-
+            prediction = [year, month, week, weekday, hour]
+            knns = _get_knns(prediction)
+            predict_count = _get_estimated(knns)
+            my_predict_table.insert(col_list,
+                                    [_quote(year), _quote(month), _quote(week), _quote(weekday), _quote(hour),
+                                     _quote(predict_count)])
         my_predict_table.commit_record()
-        my_db.add_index(PREDICTION_TABLE, '', 'query_index', col_list[:-1])
+        my_db.add_index(PREDICTION_TABLE, 'query_index', col_list[:-1])
         my_db.close()
 
 
-def get_distance(date1_list, date2_list):
-    distance = math.sqrt(
-            math.pow(date1_list[0] - date2_list[0], 2) + math.pow((date1_list[1] - date2_list[1]), 2) + math.pow(
-                    date1_list[2] - date2_list[2], 2) + math.pow(date1_list[3] - date2_list[3], 2) + math.pow(
-                    date1_list[4] - date2_list[4], 2))
-    return distance
+def _quote(val):
+    return '\'%s\'' % str(val)
 
 
-# distribute all attrs from 0 to 100, calculate coefficient a and b in 0 = attr1a + b, 100 = attr2 + b (attr1 < attr2)
-# return an array of integer, values are coefficients
-def get_coefficient(attr1, attr2):
-    coefficient = []
-    a = math.floor(100 / (attr2 - attr1))
-    b = math.floor(attr1 * a * (-1))
-    coefficient.append(a)
-    coefficient.append(b)
-    return coefficient
+def _yield_neighbours(origin):
+    i_start = _find_first_nz(origin)
+    for i in range(i_start, len(origin)):
+        if origin[i] >= 0:
+            new = origin[:]
+            new[i] += 1
+            yield new[:]
+        if origin[i] <= 0:
+            new = origin[:]
+            new[i] -= 1
+            yield new[:]
 
 
-def distribute_attr(attr, coefficient):
-    distributed_attr = coefficient[0] * attr + coefficient[1]
-    return distributed_attr
+def _get_knns(prediction, k=5, max_itr=50):
+    my_q = Queue.Queue()
+    my_q.put(([0, 0, 0, 0, 0], 0))
+    nearest_neighbours = []
+    itr_cnt = 0
+    while my_q and itr_cnt < max_itr:
+        cur = my_q.get()
+        delta = cur[0]
+        distance = cur[1]
+        neighbour = _vector_addition(delta, prediction)
+        if distance > 0 and _is_valid(DATA_STRUCTURE, neighbour):
+            # query car count
+            car_count_set = my_history_table.get_record('CAR_NUM', DATA_STRUCTURE, neighbour)
+            nearest_neighbours.append((car_count_set[0], distance))
+        if len(nearest_neighbours) == k:
+            break
+        for element in _yield_neighbours(delta):
+            my_q.put((element, distance + 1))
+        itr_cnt += 1
+    return nearest_neighbours
 
 
-# save change ranges for different attrs in change_range
-def get_change_step(earliest, latest):
-    change_step = []
-    for i in range(len(earliest)):
-        change_step.append(math.floor(100 / (latest[i] - earliest[i])))
-    return change_step
+def _find_first_nz(cur):
+    for i in range(len(cur)):
+        if cur[i] != 0:
+            return i
+    return 0
 
 
-# data_need_to_predict includes attrs (year, month, day, week, hour)
-# attrs in data_need_to_predict is distributed
-def get_nearest_in_10_data_samples(data_need_to_predict, change_step):
-    nearest_distance = sys.maxint
-    nearest_data_set = [[]]
-    cnt = 0
-    sign = -1
-    tmp_data_list = []
-    ptr = 0
-    mark = 0
-    mark_cnt = 1
-    convert_sign = 0
-    # test_rst = []
-    change_range_number = 1
-    # 1 represents odd, -1 represents even
-    traverse_time = 1
-    while cnt < 10:
-        if traverse_time == -1:
-            sign *= -1
-        for attr in data_need_to_predict:
-            if mark < len(change_step):
-                if ptr == mark and (
-                                    attr + sign * change_step[mark] * change_range_number < 0 or attr + sign *
-                            change_step[
-                                mark] * change_range_number > 100):
-                    change_range_number *= 2
-                    sign *= -1
-                    convert_sign += 1
-                if ptr == mark:
-                    tmp_data_list.append(attr + sign * change_range_number * change_step[mark])
-                else:
-                    tmp_data_list.append(attr)
-            ptr += 1
-            change_range_number = 1
-        nearest_data_set.append(tmp_data_list)
-        # comment part is getting the nearest most data which satisfy nearest_distance
-        # distance = get_distance(tmp_data_list, data_need_to_predict)
-        # if distance < nearest_distance:
-        #     nearest_distance = distance
-        #     nearest_data_set = tmp_data_list
-        if convert_sign == 1:
-            sign *= -1
-        cnt += 1
-        if mark_cnt == 2:
-            mark += 1
-        traverse_time *= -1
-        ptr = 0
-        tmp_data_list = []
-        convert_sign = 0
-        if mark_cnt == 2:
-            mark_cnt = 1
-        else:
-            mark_cnt += 1
-    return nearest_data_set
+# cur is neighbour list, for example cur is [1, 0, 0, 0, 0], data_need_to_predict is [2013, 1, 4, 3, 5]
+# then get_data = [2014, 1, 4, 3, 5]
+def _vector_addition(lhs, rhs):
+    res = [0] * len(lhs)
+    for i in range(len(lhs)):
+        res[i] = lhs[i] + rhs[i]
+    return res
 
 
-def data_is_valid(dis_attr_values, col_list):
-    if my_history_table.check_valid_data(HISTORICAL_TABLE, col_list, dis_attr_values):
-        return True
-    else:
-        return False
-
-
-def eliminate_un_valid_data(dis_attrs_set, col_list):
-    for dis_attr_values in dis_attrs_set:
-        if not data_is_valid(dis_attr_values, col_list):
-            dis_attrs_set.remove(dis_attr_values)
-    return dis_attrs_set
-
-
-def get_neighbours_distance(nearest_data_set, data_need_to_predict):
-    neighbours_distance = []
-    for data in nearest_data_set:
-        neighbours_distance.append(get_distance(data, data_need_to_predict))
-    return neighbours_distance
-
-
-# get weighted distances using Gaussian Function
-def get_weighted_neighbours_distance(neighbours_distance, sigma=10.0):
-    weighted_neighbours_distance = []
-    for distance in neighbours_distance:
-        weighted_neighbours_distance.append(math.e ** (-distance ** 2 / (2 * sigma ** 2)))
-    return weighted_neighbours_distance
+def _is_valid(col_list, attr_values):
+    return my_history_table.is_existing(col_list, attr_values)
 
 
 # get prediction car number
-def get_weighted_estimated_car_num(neighbours_distance, weighted_neighbours_distance):
+def _get_estimated(num_dist_pairs, sigma=10.0):
     avg = 0
     total_weight = 0
-    for distance in neighbours_distance:
-        avg *= distance
-    for weighted_distance in weighted_neighbours_distance:
-        total_weight += weighted_distance
+    for pair in num_dist_pairs:
+        weight = math.e ** (-pair[1] ** 2 / (2 * sigma ** 2))
+        avg += pair[0] * weight
+        total_weight += weight
     return avg / total_weight
-
-
-

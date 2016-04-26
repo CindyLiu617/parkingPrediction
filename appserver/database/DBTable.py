@@ -57,13 +57,17 @@ class DBTable:
         except MySQLdb.Error, e:
             print('MySQLdb error %s: %s' % (e.args[0], e.args[1]))
 
-    # TODO: check index type
-    def add_index(self, table, index_type, index_name, col_list):
+    # index_type = [UNIQUE|FULLTEXT|SPATIAL]
+    def add_index(self, table, index_name, col_list, index_type=''):
         try:
             cursor = self.connection.cursor()
-            add_index = "ALTER TABLE %s ADD %s INDEX %s (%s)" % (table, index_type, index_name, col_list)
+            if index_type == '':
+                add_index = "CREATE INDEX %s ON %s (%s)" % (index_name, table, ', '.join(col_list))
+            else:
+                add_index = "CREATE %s INDEX %s ON %s (%s)" % (index_type, index_name, table, ', '.join(col_list))
             cursor.execute(add_index)
         except MySQLdb.Error, e:
+            print("Error running command:\t" + add_index)
             print('MySQLdb error %s: %s' % (e.args[0], e.args[1]))
 
     def drop_index(self, table, index):
@@ -72,6 +76,7 @@ class DBTable:
             drop_index = "DROP INDEX %s ON %s" % (index, table)
             cursor.execute(drop_index)
         except MySQLdb.Error, e:
+            print("Error running command:\t" + drop_index)
             print('MySQLdb error %s: %s' % (e.args[0], e.args[1]))
 
     def is_db_existing(self, db):

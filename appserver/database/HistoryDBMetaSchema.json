@@ -3,10 +3,9 @@
     "cols": [
       "YEAR",
       "MONTH",
-      "DAY",
       "WEEK",
+      "WEEKDAY",
       "HOUR",
-      "MINUTE",
       "CAR_NUM"
     ]
   },
@@ -21,23 +20,18 @@
       "type": "INTEGER",
       "default": "0"
     },
-    "DAY": {
-      "name": "DAY",
-      "type": "INTEGER",
-      "default": "0"
-    },
     "WEEK": {
       "name": "WEEK",
       "type": "INTEGER",
       "default": "0"
     },
-    "HOUR": {
-      "name": "HOUR",
+    "WEEKDAY": {
+      "name": "WEEKDAY",
       "type": "INTEGER",
       "default": "0"
     },
-    "MINUTE": {
-      "name": "MINUTE",
+    "HOUR": {
+      "name": "HOUR",
       "type": "INTEGER",
       "default": "0"
     },
